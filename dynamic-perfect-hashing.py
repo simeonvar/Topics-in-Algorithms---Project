@@ -74,11 +74,6 @@ class DynamicPerfectHashing:
     def setDeleted(boolean, isDeleted):
         self.isDeleted=isDeletde
 
-#   Never used
-#    def Member(self, element):
-#        j=self.universal_hash_function.hash(element)
-
-
     def calculate_m(self, element_count):
         '''Calculate M'''
         M = (1 + self.c) * element_count
