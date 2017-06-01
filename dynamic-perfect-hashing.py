@@ -9,15 +9,12 @@ class DynamicPerfectHashing:
         self.tables = []
         self.entry = []
         self.M = 0
-        self.j = 0
         # nice number
         self.c = 0.5
         self.universe_size = universe_size
         self.prime = self.calculate_prime(universe_size)
         # some bogus start value
         self.universal_hash_function = HashFunction(1, 0)
-        #Flag telling whether this entry has been deleted and should be removed or not
-        self.isDeleted = false
 
     def calculate_prime(self, universe_size):
         '''Calculates prime larger than the universe_size'''
@@ -59,20 +56,21 @@ class DynamicPerfectHashing:
 
     def Delete(self, element):
         '''Deletion of x simply flags x as deleted without removal and increments count.'''
-        self.count+=1
-        j=self.universal_hash_function.hash(element)
+        self.count += 1
+        j = self.universal_hash_function.hash(element)
 
-        if(self.tables[j] != null):
-            self.location = self.tables[j].self.universal_hash_function.hash(element)
+        if self.tables[j] != None:
 
-            if(self.tables[j].L[location] != null):
-                self.tables[j].L[location].setDeleted(true)
+            table = self.tables[j]
 
-        if(self.count>=self.M):
+            # TODO: create table of hash functions
+            location = table.self.universal_hash_function.hash(element)
+
+            if table.L[location] != None:
+                table.L[location].deleted = True
+
+        if self.count >= self.M:
             self.RehashAll(-1)
-    '''Sets whether this entry should be marked for deletion or not. If true this element is set for deletion.'''
-    def setDeleted(boolean, isDeleted):
-        self.isDeleted=isDeletde
 
     def calculate_m(self, element_count):
         '''Calculate M'''
