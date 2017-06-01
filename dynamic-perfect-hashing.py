@@ -6,7 +6,7 @@ import random
 class DynamicPerfectHashing:
     def __init__(self, universe_size):
         self.count = 0
-        self.tables = []
+        self.table_list = []
         self.entry = []
         self.M = 0
         # nice number
@@ -41,40 +41,56 @@ class DynamicPerfectHashing:
         '''x is the new value that will be inserted'''
         L = []
 
-        for table in self.tables:
-            for entry in table:
-                L.append(entry)
-                entry.deleted = True
+        for table in self.table_list:
+            for entry in table.elements:
+                if not entry.deleted:
+                    L.append(entry)
+                    entry.deleted = True
 
-        self.element_count = sum([len(sub_table) for sub_table in L])
-        self.M = self.calculate_m(self.element_count)
+        self.count = sum([len(sub_table) for sub_table in L])
+        self.M = self.calculate_m(self.count)
 
-        W = [set() for _ in range(len(L))]
-        while not self.star_star_condition(W, self.element_count):
-            universal_hash_function = HashFunction(
-                self.prime, self.element_count)
+        W = [set() for _ in range(self.M * 2)]
+
+        while not self.star_star_condition(W, self.count):
+            self.universal_hash_function = HashFunction(
+                self.prime, self.count)
+
+            for element in L:
+                W[self.universal_hash_function.hash(element)].add(element)
+
+        self.table_list = [Table(self.prime) for _ in range(self.M * 2)]
+        for index, table in enumerate(self.table_list):
+            element_count = len(W[index])
+            table.max_element_count = 2 * element_count
+            table.allocated_space = 2 * element_count * (element_count - 1)
+
+        for element in L:
+            self.Insert(element.value)
 
     def Delete(self, element):
         '''Deletion of x simply flags x as deleted without removal and increments count.'''
-        self.count += 1
+        self.count -= 1
         j = self.universal_hash_function.hash(element)
 
-        if self.tables[j] != None:
+        if self.table_list[j] != None:
 
-            table = self.tables[j]
+            table = self.table_list[j]
 
-            # TODO: create table of hash functions
-            location = table.self.universal_hash_function.hash(element)
+            location = table.hash_function.hash(element)
 
-            if table.L[location] != None:
-                table.L[location].deleted = True
+            if table.elements[location] != None:
+                table.elements[location].deleted = True
 
         if self.count >= self.M:
             self.RehashAll(-1)
 
+    def Insert(self, element):
+        exit(1)
+
     def calculate_m(self, element_count):
         '''Calculate M'''
-        M = (1 + self.c) * element_count
+        M = (1 + self.c) * max(element_count, 4)
         if M == 0:
             M = 1
         return M
@@ -101,3 +117,11 @@ class HashFunction:
     def hash(self, element):
         '''Hash the element'''
         return (self.k * element % self.prime) % self.M
+
+class Table:
+    def __init__(self, prime):
+        self.elements = []
+        self.element_count = 0
+        self.max_element_count = 0 # M
+        self.allocated_space = 0
+        self.hash_function = HashFunction(prime, self.max_element_count)
