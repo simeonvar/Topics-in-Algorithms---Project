@@ -14,27 +14,34 @@ class DynamicPerfectHashing:
         self.universe_size = universe_size
         self.prime = self.calculate_prime(universe_size)
         # some bogus start value
-        self.universal_hash_function = HashFunction(1, 0)
+        self.universal_hash_function = HashFunction(self.prime, 0)
 
     def calculate_prime(self, universe_size):
         '''Calculates prime larger than the universe_size'''
+        # base cases
+        if universe_size == 0:
+            return 1
+        elif universe_size == 1:
+            return 2
+
         primes = []
         value = 3
+        is_prime = True
         while True:
             # check if it's divisible by prime
             for prime in primes:
                 if value % prime == 0:
-                    # can skip twice because never divisible by 2
-                    value += 2
-                    continue
+                    is_prime = False
+                    break
 
             # return if bigger than universe size
-            if value > universe_size:
+            if value > universe_size and is_prime:
                 return value
 
             # add to prime list because not divisible by prime
             primes.append(value)
             value += 2
+            is_prime = True
 
 
     def RehashAll(self, element):
@@ -110,6 +117,10 @@ class Entry:
 
 class HashFunction:
     def __init__(self, prime, M):
+        # it's okay to increase the size of the prime
+        # do it to have a bigger random range
+        if prime == 1:
+            prime = 3
         self.prime = prime
         self.M = M
         self.k = random.randrange(1, prime - 1)
