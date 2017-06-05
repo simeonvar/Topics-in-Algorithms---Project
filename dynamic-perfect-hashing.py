@@ -95,6 +95,18 @@ class DynamicPerfectHashing:
     def Insert(self, element):
         exit(1)
 
+
+    def Locate(self,element):
+        j = self.universal_hash_function.hash(element)
+        if self.table_list[j] != None:
+            table= self.table_list[j]
+            location = table.hash_function.hash(element)
+
+            if table.elements[location] != None:
+                return true
+        else :
+            return false
+
     def calculate_m(self, element_count):
         '''Calculate M'''
         M = (1 + self.c) * max(element_count, 4)
