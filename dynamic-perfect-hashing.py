@@ -201,6 +201,9 @@ class DynamicPerfectHashing:
 
     def Locate(self,element):
         '''Return true if the element exists'''
+        if element < 0 or element > self.universe_size:
+            raise ValueError('Element is outside of universe')
+
         j = self.universal_hash_function.hash(element)
         table = self.table_list[j]
         location = table.hash_function.hash(element)

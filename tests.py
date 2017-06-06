@@ -31,9 +31,27 @@ class TestDynamicPerfectHashing(unittest.TestCase):
 
         self.assertIsNone(dynperf.Insert(0))
         self.assertRaises(ValueError, dynperf.Insert, -1)
-        self.assertRaises(ValueError, dynperf.Delete, -1)
         self.assertRaises(ValueError, dynperf.Insert, 301)
+
+        self.assertRaises(ValueError, dynperf.Delete, -1)
         self.assertRaises(ValueError, dynperf.Delete, 301)
+
+        self.assertRaises(ValueError, dynperf.Locate, -1)
+        self.assertRaises(ValueError, dynperf.Locate, 301)
+
+    def test_insert_duplicate(self):
+        dynperf = DynPerf(50)
+
+        dynperf.Insert(37)
+        dynperf.Insert(37)
+
+        self.assertTrue(dynperf.Locate(37))
+
+        dynperf.Delete(37)
+
+        self.assertFalse(dynperf.Locate(37))
+
+
 
 if __name__ == '__main__':
     unittest.main()
