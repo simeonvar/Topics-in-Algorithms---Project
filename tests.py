@@ -17,13 +17,7 @@ class TestDynamicPerfectHashing(unittest.TestCase):
         dynperf = dynamicperfecthashing.DynamicPerfectHashing(500)
         self.assertEqual(dynperf.prime, 503)
 
-    def test_insert(self):
-        dynperf = dynamicperfecthashing.DynamicPerfectHashing(2)
-
-        dynperf.Insert(1)
-        self.assertTrue(dynperf.Locate(1))
-
-    def test_delete(self):
+    def test_simple(self):
         dynperf = dynamicperfecthashing.DynamicPerfectHashing(2)
 
         dynperf.Insert(1)
