@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 '''Implementation of dynamic perfect hashing'''
 
+import math
 import random
 
 class DynamicPerfectHashing:
@@ -51,17 +52,21 @@ class DynamicPerfectHashing:
         for table in self.table_list:
             for entry in table.elements:
                 if not entry.deleted:
-                    L.append(entry)
+                    L.append(entry.value)
                     entry.deleted = True
 
-        self.count = sum([len(sub_table) for sub_table in L])
+        L.append(element)
+
+        self.count = len(L)
         self.M = self.calculate_m(self.count)
 
-        W = [set() for _ in range(self.M * 2)]
+        s = max(2, 2 * (self.count - 1))
+
+        W = [set() for _ in range(s)]
 
         while True:
             self.universal_hash_function = HashFunction(
-                self.prime, self.count)
+                self.prime, s)
 
             for element in L:
                 W[self.universal_hash_function.hash(element)].add(element)
@@ -72,13 +77,13 @@ class DynamicPerfectHashing:
             if self.star_star_condition(sub_table_space_list, self.M):
                 break
 
-        self.table_list = [Table(self.prime) for _ in range(self.M * 2)]
+        self.table_list = [Table(self.prime) for _ in range(s)]
         for index, table in enumerate(self.table_list):
             element_count = len(W[index])
             table.update(element_count)
 
         for element in L:
-            self.Insert(element.value)
+            self.Insert(element)
 
     def calculate_required_space(self, elements):
         b = len(elements)
@@ -200,9 +205,7 @@ class DynamicPerfectHashing:
 
     def calculate_m(self, element_count):
         '''Calculate M'''
-        M = (1 + self.c) * max(element_count, 4)
-        if M == 0:
-            M = 1
+        M = math.ceil((1 + self.c) * max(element_count, 4))
         return M
 
     def star_star_condition(self, sub_table_space_list, M):
@@ -232,16 +235,19 @@ class HashFunction:
         '''Hash the element'''
         return (self.k * element % self.prime) % self.M
 
+
 class Table:
     def __init__(self, prime):
         self.elements = []
         self.element_count = 0
         self.max_element_count = 0 # M
         self.allocated_space = 0
-        self.hash_function = HashFunction(prime, self.max_element_count)
-    
+        self.prime = prime
+        self.hash_function = None
+
     def update(self, element_count):
         self.max_element_count = 2 * element_count
-        self.allocated_space = 2 * element_count * (element_count - 1)
+        self.allocated_space = 2 * self.max_element_count * (self.max_element_count - 1)
         self.elements = [Entry() for _ in range(self.allocated_space)]
+        self.hash_function = HashFunction(self.prime, self.max_element_count)
 
