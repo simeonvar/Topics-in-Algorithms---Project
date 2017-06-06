@@ -159,7 +159,8 @@ class DynamicPerfectHashing:
     def update_sub_table_same_size(self, table, new_element):
         '''Returns an injective hash function for the given table'''
 
-        sub_table_elements = list(filter(lambda element: not element.deleted, table.elements))
+        sub_table_elements = list(map(lambda x: x.value, filter(
+            lambda element: not element.deleted, table.elements)))
 
         for element in table.elements:
             element.deleted = True

@@ -29,6 +29,27 @@ class TestDynamicPerfectHashing(unittest.TestCase):
         self.assertEqual(dynperf.count, 0)
         self.assertEqual(len(dynperf.table_list), 1)
         self.assertFalse(dynperf.Locate(1))
+    
+    def test_insert_multiple(self):
+        dynperf = DynPerf(2)
+
+        dynperf.Insert(1)
+        self.assertEqual(dynperf.count, 1)
+        self.assertTrue(dynperf.Locate(1))
+
+        dynperf.Insert(2)
+        self.assertEqual(dynperf.count, 2)
+        self.assertTrue(dynperf.Locate(1))
+        self.assertTrue(dynperf.Locate(2))
+
+        dynperf.Delete(1)
+        self.assertEqual(dynperf.count, 1)
+        self.assertFalse(dynperf.Locate(1))
+
+        dynperf.Delete(2)
+        self.assertEqual(dynperf.count, 0)
+        self.assertFalse(dynperf.Locate(2))
+
 
     def test_outside_universe(self):
         dynperf = DynPerf(300)
@@ -60,7 +81,23 @@ class TestDynamicPerfectHashing(unittest.TestCase):
         self.assertEqual(dynperf.count, 0)
         self.assertFalse(dynperf.Locate(37))
 
+    def test_insert_sub_table_no_size_increase_rehash(self):
+        '''Create collision by forcing the elements into the same subtable and the same location''' 
+        dynperf = DynPerf(30)
 
+        class PredictableHash:
+            def hash(self, element):
+                return 0
+
+        dynperf.global_hash_function = PredictableHash()
+        dynperf.Insert(0)
+
+        dynperf.table_list[0].hash_function = PredictableHash()
+        dynperf.Insert(1)
+
+        self.assertEqual(dynperf.count, 2)
+        self.assertTrue(dynperf.Locate(0))
+        self.assertTrue(dynperf.Locate(1))
 
 if __name__ == '__main__':
     unittest.main()
