@@ -124,7 +124,29 @@ class TestDynamicPerfectHashing(unittest.TestCase):
         self.assertTrue(dynperf.Locate(0))
         self.assertTrue(dynperf.Locate(1))
         self.assertTrue(dynperf.Locate(2))
+    
+    def test_create_another_subtable(self):
+        dynperf = DynPerf(100)
 
+        for i in range(6):
+            dynperf.Insert(i)
+
+        self.assertTrue(dynperf.M, 6)
+        self.assertTrue(dynperf.count, 6)
+
+        # 6 elements are allowed until more tables are created
+        dynperf.insert(6)
+
+        self.assertTrue(dynperf.count, 7)
+
+        for i in range(7):
+            self.assertTrue(dynperf.Locate(i))
+
+        for i in range(7):
+            dynperf.Delete(i)
+
+        for i in range(7):
+            self.assertFalse(dynperf.Locate(i))
 
 if __name__ == '__main__':
     unittest.main()

@@ -77,6 +77,8 @@ class DynamicPerfectHashing:
             if self.star_star_condition(sub_table_space_list, self.M):
                 break
 
+            W.clear()
+
         self.table_list = [Table(self.prime) for _ in range(s)]
         for index, table in enumerate(self.table_list):
             element_count = len(W[index])
