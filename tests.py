@@ -22,10 +22,12 @@ class TestDynamicPerfectHashing(unittest.TestCase):
 
         dynperf.Insert(1)
         self.assertEqual(dynperf.count, 1)
+        self.assertEqual(len(dynperf.table_list), 1)
         self.assertTrue(dynperf.Locate(1))
 
         dynperf.Delete(1)
         self.assertEqual(dynperf.count, 0)
+        self.assertEqual(len(dynperf.table_list), 1)
         self.assertFalse(dynperf.Locate(1))
 
     def test_outside_universe(self):

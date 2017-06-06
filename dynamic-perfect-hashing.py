@@ -60,7 +60,7 @@ class DynamicPerfectHashing:
         self.count = len(L)
         self.M = self.calculate_m(self.count)
 
-        s = max(2, 2 * (self.count - 1))
+        s = max(1, 2 * (self.count - 1))
 
         W = [set() for _ in range(s)]
 
