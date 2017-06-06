@@ -29,7 +29,8 @@ class TestDynamicPerfectHashing(unittest.TestCase):
     def test_outside_universe(self):
         dynperf = DynPerf(300)
 
-        self.assertIsNone(dynperf.Insert(0))
+        dynperf.Insert(0)
+        self.assertEqual(dynperf.count, 1)
         self.assertRaises(ValueError, dynperf.Insert, -1)
         self.assertRaises(ValueError, dynperf.Insert, 301)
 
@@ -40,15 +41,18 @@ class TestDynamicPerfectHashing(unittest.TestCase):
         self.assertRaises(ValueError, dynperf.Locate, 301)
 
     def test_insert_duplicate(self):
+        '''There's no documentation about how to handle duplicates, but IMO no change should occur'''
         dynperf = DynPerf(50)
 
         dynperf.Insert(37)
-        dynperf.Insert(37)
+        self.assertEqual(dynperf.count, 1)
+        self.assertTrue(dynperf.Locate(37))
 
+        dynperf.Insert(37)
+        self.assertEqual(dynperf.count, 1)
         self.assertTrue(dynperf.Locate(37))
 
         dynperf.Delete(37)
-
         self.assertFalse(dynperf.Locate(37))
 
 
