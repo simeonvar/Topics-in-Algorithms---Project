@@ -83,7 +83,12 @@ class DynamicPerfectHashing:
             table.update(element_count)
 
         for element in L:
-            self.Insert(element)
+            j = self.universal_hash_function.hash(element)
+            table = self.table_list[j]
+            location = table.hash_function.hash(element)
+            table.elements[location].value = element
+            table.elements[location].deleted = False
+
 
     def calculate_required_space(self, elements):
         b = len(elements)
@@ -130,6 +135,13 @@ class DynamicPerfectHashing:
                 table.elements[location].value = element
                 table.elements[location].deleted = False
             else:
+
+                # if a duplicate element is inserted, do nothing
+                if not table.elements[location].deleted and table.elements[location].value == element:
+                    self.count -= 1
+                    return
+
+
                 table.element_count += 1
                 # Is there enough space for the element
                 if table.element_count <= table.max_element_count:
@@ -256,6 +268,7 @@ class Table:
         self.hash_function = None
 
     def update(self, element_count):
+        self.element_count = element_count
         self.max_element_count = 2 * element_count
         self.allocated_space = 2 * self.max_element_count * (self.max_element_count - 1)
         self.elements = [Entry() for _ in range(self.allocated_space)]

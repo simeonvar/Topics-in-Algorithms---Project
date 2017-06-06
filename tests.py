@@ -21,9 +21,11 @@ class TestDynamicPerfectHashing(unittest.TestCase):
         dynperf = DynPerf(2)
 
         dynperf.Insert(1)
+        self.assertEqual(dynperf.count, 1)
         self.assertTrue(dynperf.Locate(1))
 
         dynperf.Delete(1)
+        self.assertEqual(dynperf.count, 0)
         self.assertFalse(dynperf.Locate(1))
 
     def test_outside_universe(self):
@@ -53,6 +55,7 @@ class TestDynamicPerfectHashing(unittest.TestCase):
         self.assertTrue(dynperf.Locate(37))
 
         dynperf.Delete(37)
+        self.assertEqual(dynperf.count, 0)
         self.assertFalse(dynperf.Locate(37))
 
 
