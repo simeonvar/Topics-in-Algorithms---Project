@@ -93,6 +93,10 @@ class DynamicPerfectHashing:
 
     def Delete(self, element):
         '''Deletion of x simply flags x as deleted without removal and increments count.'''
+
+        if element < 0 or element > self.universe_size:
+            raise ValueError('Element is outside of universe')
+
         self.count -= 1
         j = self.universal_hash_function.hash(element)
 
@@ -109,6 +113,9 @@ class DynamicPerfectHashing:
             self.RehashAll(-1)
 
     def Insert(self, element):
+        if element < 0 or element > self.universe_size:
+            raise ValueError('Element is outside of universe')
+
         self.count += 1
 
         if self.count > self.M:

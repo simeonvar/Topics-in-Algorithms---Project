@@ -4,27 +4,36 @@
 import unittest
 
 # use weird import because of invalid module name (my bad)
-dynamicperfecthashing = __import__('dynamic-perfect-hashing')
+DynPerf = __import__('dynamic-perfect-hashing').DynamicPerfectHashing
 
 class TestDynamicPerfectHashing(unittest.TestCase):
     def test_calculate_prime(self):
-        dynperf = dynamicperfecthashing.DynamicPerfectHashing(0)
+        dynperf = DynPerf(0)
         self.assertEqual(dynperf.prime, 1)
 
-        dynperf = dynamicperfecthashing.DynamicPerfectHashing(2)
+        dynperf = DynPerf(2)
         self.assertEqual(dynperf.prime, 3)
 
-        dynperf = dynamicperfecthashing.DynamicPerfectHashing(500)
+        dynperf = DynPerf(500)
         self.assertEqual(dynperf.prime, 503)
 
     def test_simple(self):
-        dynperf = dynamicperfecthashing.DynamicPerfectHashing(2)
+        dynperf = DynPerf(2)
 
         dynperf.Insert(1)
         self.assertTrue(dynperf.Locate(1))
 
         dynperf.Delete(1)
         self.assertFalse(dynperf.Locate(1))
+
+    def test_outside_universe(self):
+        dynperf = DynPerf(300)
+
+        self.assertIsNone(dynperf.Insert(0))
+        self.assertRaises(ValueError, dynperf.Insert, -1)
+        self.assertRaises(ValueError, dynperf.Delete, -1)
+        self.assertRaises(ValueError, dynperf.Insert, 301)
+        self.assertRaises(ValueError, dynperf.Delete, 301)
 
 if __name__ == '__main__':
     unittest.main()
