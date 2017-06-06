@@ -59,53 +59,144 @@ class DynamicPerfectHashing:
 
         W = [set() for _ in range(self.M * 2)]
 
-        while not self.star_star_condition(W, self.count):
+        while True:
             self.universal_hash_function = HashFunction(
                 self.prime, self.count)
 
             for element in L:
                 W[self.universal_hash_function.hash(element)].add(element)
 
+            sub_table_space_list = [self.calculate_required_space(sub_table) for sub_table in W]
+
+            # continue until the condition is true
+            if self.star_star_condition(sub_table_space_list, self.M):
+                break
+
         self.table_list = [Table(self.prime) for _ in range(self.M * 2)]
         for index, table in enumerate(self.table_list):
             element_count = len(W[index])
-            table.max_element_count = 2 * element_count
-            table.allocated_space = 2 * element_count * (element_count - 1)
+            table.update(element_count)
 
         for element in L:
             self.Insert(element.value)
+
+    def calculate_required_space(self, elements):
+        b = len(elements)
+        m = 2 * b
+        s = 2 * m * (m - 1)
+        return s
 
     def Delete(self, element):
         '''Deletion of x simply flags x as deleted without removal and increments count.'''
         self.count -= 1
         j = self.universal_hash_function.hash(element)
 
-        if self.table_list[j] != None:
+        table = self.table_list[j]
 
-            table = self.table_list[j]
+        location = table.hash_function.hash(element)
 
-            location = table.hash_function.hash(element)
-
-            if table.elements[location] != None:
-                table.elements[location].deleted = True
+        if table.elements[location].deleted:
+            raise ValueError('Element does not exist')
+        else:
+            table.elements[location].deleted = True
 
         if self.count >= self.M:
             self.RehashAll(-1)
 
     def Insert(self, element):
-        exit(1)
+        self.count += 1
 
+        if self.count > self.M:
+            self.RehashAll(element)
+        else:
+            j = self.universal_hash_function.hash(element)
 
-    def Locate(self,element):
-        j = self.universal_hash_function.hash(element)
-        if self.table_list[j] != None:
-            table= self.table_list[j]
+            table = self.table_list[j]
             location = table.hash_function.hash(element)
 
-            if table.elements[location] != None:
-                return true
-        else :
-            return false
+            if table.elements[location].deleted:
+                table.elements[location].value = element
+                table.elements[location].deleted = False
+            else:
+                table.element_count += 1
+                # Is there enough space for the element
+                if table.element_count <= table.max_element_count:
+                    if table.elements[location].deleted:
+                        table.elements[location].value = element
+                        table.elements[location].deleted = False
+
+                    else:
+                        self.update_sub_table_same_size(table, element)
+                # We have to increase the size of the subtable
+                else:
+                    self.update_sub_table_increase_size(table, element)
+
+
+    def update_sub_table_same_size(self, table, new_element):
+        '''Returns an injective hash function for the given table'''
+
+        sub_table_elements = list(filter(lambda element: not element.deleted, table.elements))
+
+        for element in table.elements:
+            element.deleted = True
+
+        sub_table_elements.append(new_element)
+        table.element_count = len(sub_table_elements)
+
+        hash_function = HashFunction(table.prime, table.max_element_count)
+
+        while not self.is_injective(sub_table_elements, hash_function):
+            hash_function = HashFunction(table.prime, table.max_element_count)
+
+        table.hash_function = hash_function
+
+        for element in sub_table_elements:
+            location = table.hash_function.hash(element)
+
+            table.elements[location].value = element
+            table.elements[location].deleted = False
+
+
+        return hash_function
+
+    def update_sub_table_increase_size(self, table, new_element):
+        previous_allocated_space = table.allocated_space
+
+        table.max_element_count = 2 * max(1, table.max_element_count)
+        table.allocated_space = 2 * table.max_element_count * (table.max_element_count - 1)
+
+        # add the amount of new elements
+        table.elements.extend([Entry() for _ in range(
+            table.allocated_space - previous_allocated_space)])
+
+        sub_table_space_list = [table.allocated_space for table in self.table_list]
+
+        if self.star_star_condition(sub_table_space_list, self.M):
+            self.update_sub_table_same_size(table, new_element)
+        else:
+            self.RehashAll(new_element)
+
+    def is_injective(self, element_list, hash_function):
+        '''Check if a hash on a list is injective'''
+        location_list = set()
+
+        for element in element_list:
+            location = hash_function.hash(element)
+            if location in location_list:
+                return False
+
+        return True
+
+    def Locate(self,element):
+        '''Return true if the element exists'''
+        j = self.universal_hash_function.hash(element)
+        table = self.table_list[j]
+        location = table.hash_function.hash(element)
+
+        if not table.elements[location].deleted and table.elements[location].value == element:
+            return True
+
+        return False
 
     def calculate_m(self, element_count):
         '''Calculate M'''
@@ -114,18 +205,18 @@ class DynamicPerfectHashing:
             M = 1
         return M
 
-    def star_star_condition(self, W, element_count):
+    def star_star_condition(self, sub_table_space_list, M):
         '''Returns True if the condition holds'''
-        lhs = sum([2*(len(w) ** 2) for w in W])
-        rhs = (8 * (element_count ** 2) /
-               (self.calculate_m(element_count))) + 2 * element_count
+        lhs = sum(sub_table_space_list)
+        rhs = (32 * (M ** 2) /
+               (len(sub_table_space_list) + 4 * M))
 
-        return lhs < rhs
+        return lhs <= rhs
 
 class Entry:
-    def __init__(self, value):
-        self.value = value
-        self.deleted = False
+    def __init__(self):
+        self.value = None
+        self.deleted = True
 
 class HashFunction:
     def __init__(self, prime, M):
@@ -148,3 +239,9 @@ class Table:
         self.max_element_count = 0 # M
         self.allocated_space = 0
         self.hash_function = HashFunction(prime, self.max_element_count)
+    
+    def update(self, element_count):
+        self.max_element_count = 2 * element_count
+        self.allocated_space = 2 * element_count * (element_count - 1)
+        self.elements = [Entry() for _ in range(self.allocated_space)]
+
