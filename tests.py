@@ -6,6 +6,12 @@ import unittest
 # use weird import because of invalid module name (my bad)
 DynPerf = __import__('dynamic-perfect-hashing').DynamicPerfectHashing
 
+class PredictableHash:
+    def __init__(self, hasher):
+        self.hasher = hasher
+    def hash(self, element):
+        return self.hasher(element)
+
 class TestDynamicPerfectHashing(unittest.TestCase):
     def test_calculate_prime(self):
         dynperf = DynPerf(0)
@@ -16,6 +22,12 @@ class TestDynamicPerfectHashing(unittest.TestCase):
 
         dynperf = DynPerf(500)
         self.assertEqual(dynperf.prime, 503)
+
+    def test_is_injective(self):
+        '''Force collision with predictable hash''' 
+        dynperf = DynPerf(2)
+        self.assertFalse(dynperf.is_injective([1, 1], PredictableHash(lambda _: 0)))
+        self.assertTrue(dynperf.is_injective([0, 1], PredictableHash(lambda x: x)))
 
     def test_simple(self):
         dynperf = DynPerf(2)
@@ -85,19 +97,34 @@ class TestDynamicPerfectHashing(unittest.TestCase):
         '''Create collision by forcing the elements into the same subtable and the same location''' 
         dynperf = DynPerf(30)
 
-        class PredictableHash:
-            def hash(self, element):
-                return 0
-
-        dynperf.global_hash_function = PredictableHash()
+        dynperf.global_hash_function = PredictableHash(lambda _: 0)
         dynperf.Insert(0)
 
-        dynperf.table_list[0].hash_function = PredictableHash()
+        dynperf.table_list[0].hash_function = PredictableHash(lambda _: 0)
         dynperf.Insert(1)
 
         self.assertEqual(dynperf.count, 2)
         self.assertTrue(dynperf.Locate(0))
         self.assertTrue(dynperf.Locate(1))
+
+    def test_insert_sub_table_size_increase_rehash(self):
+        '''Create collision by forcing the elements into the same subtable and the same location''' 
+        dynperf = DynPerf(30)
+
+        dynperf.global_hash_function = PredictableHash(lambda _: 0)
+        dynperf.Insert(0)
+
+        dynperf.table_list[0].hash_function = PredictableHash(lambda _: 0)
+
+        dynperf.Insert(1)
+        # max element count is 2, will force a rehash on subtable
+        dynperf.Insert(2)
+
+        self.assertEqual(dynperf.count, 3)
+        self.assertTrue(dynperf.Locate(0))
+        self.assertTrue(dynperf.Locate(1))
+        self.assertTrue(dynperf.Locate(2))
+
 
 if __name__ == '__main__':
     unittest.main()

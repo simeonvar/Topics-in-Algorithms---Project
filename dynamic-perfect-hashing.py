@@ -209,6 +209,7 @@ class DynamicPerfectHashing:
             location = hash_function.hash(element)
             if location in location_list:
                 return False
+            location_list.add(location)
 
         return True
 
