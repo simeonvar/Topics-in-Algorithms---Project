@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 '''Unit tests for dynamic-perfect-hashing'''
 
+import pprint
 import unittest
+import random
 
 # use weird import because of invalid module name (my bad)
 DynPerf = __import__('dynamic-perfect-hashing').DynamicPerfectHashing
+HashFunction = __import__('dynamic-perfect-hashing').HashFunction
 
 class PredictableHash:
     def __init__(self, hasher):
@@ -138,8 +141,8 @@ class TestDynamicPerfectHashing(unittest.TestCase):
         dynperf.Insert(4)
 
         self.assertTrue(dynperf.count, 5)
-        # s = 2(n - 1) => 2 * 5 = 10
-        self.assertTrue(len(dynperf.table_list), 10)
+        # s = 2(n - 1) => 2 * 4 = 8
+        self.assertEqual(len(dynperf.table_list), 8)
 
         # make sure another element can be added after the next sublist was created
         dynperf.Insert(5)
@@ -154,6 +157,31 @@ class TestDynamicPerfectHashing(unittest.TestCase):
 
         for i in range(6):
             self.assertFalse(dynperf.Locate(i))
+
+    def test_full(self):
+        '''Full integration test by randoming 1 million values'''
+        count = int(1E6)
+        universe_size = 5000
+        elements = [random.randrange(0, universe_size) for _ in range(count)]
+        elements = set(elements) # remove any duplicates
+        count = len(elements)
+
+        dynperf = DynPerf(universe_size)
+
+        for ele in elements:
+            dynperf.Insert(ele)
+            self.assertTrue(dynperf.Locate(ele))
+
+        for ele in elements:
+            self.assertTrue(dynperf.Locate(ele))
+
+        for ele in elements:
+            dynperf.Delete(ele)
+
+        for ele in elements:
+            self.assertFalse(dynperf.Locate(ele))
+
+
 
 if __name__ == '__main__':
     unittest.main()
