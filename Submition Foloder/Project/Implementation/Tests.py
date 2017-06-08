@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 '''Unit tests for dynamic-perfect-hashing'''
 
+import pprint
 import unittest
+import random
 
 # use weird import because of invalid module name (my bad)
-DynPerf = __import__('dynamic-perfect-hashing').DynamicPerfectHashing
+DynPerf = __import__('Dynamic-Perfect-Hashing').DynamicPerfectHashing
+HashFunction = __import__('Dynamic-Perfect-Hashing').HashFunction
 
 class PredictableHash:
     def __init__(self, hasher):
@@ -128,25 +131,62 @@ class TestDynamicPerfectHashing(unittest.TestCase):
     def test_create_another_subtable(self):
         dynperf = DynPerf(100)
 
-        for i in range(6):
+        for i in range(4):
             dynperf.Insert(i)
 
-        self.assertTrue(dynperf.M, 6)
+        self.assertTrue(dynperf.count, 4)
+        self.assertEqual(len(dynperf.table_list), 1)
+
+        # 4 elements are allowed until the (**) no longer holds
+        dynperf.Insert(4)
+
+        self.assertTrue(dynperf.count, 5)
+        # s = 2(n - 1) => 2 * 4 = 8
+        self.assertEqual(len(dynperf.table_list), 8)
+
+        # make sure another element can be added after the next sublist was created
+        dynperf.Insert(5)
         self.assertTrue(dynperf.count, 6)
+        self.assertTrue(len(dynperf.table_list), 10)
 
-        # 6 elements are allowed until more tables are created
-        dynperf.insert(6)
-
-        self.assertTrue(dynperf.count, 7)
-
-        for i in range(7):
+        for i in range(6):
             self.assertTrue(dynperf.Locate(i))
 
-        for i in range(7):
+        for i in range(6):
             dynperf.Delete(i)
 
-        for i in range(7):
+        for i in range(6):
             self.assertFalse(dynperf.Locate(i))
+
+    def test_full(self):
+        '''Full integration test by randoming 1 million values'''
+        count = int(1E6)
+        # Our prime calculation method is really naive, so can't have a very
+        # large universe size
+        universe_size = 5000
+        elements = [random.randrange(0, universe_size) for _ in range(count)]
+
+        dynperf = DynPerf(universe_size)
+
+        for ele in elements:
+            dynperf.Insert(ele)
+            self.assertTrue(dynperf.Locate(ele))
+
+        for ele in elements:
+            self.assertTrue(dynperf.Locate(ele))
+
+        previously_deleted = set()
+        for ele in elements:
+            if ele in previously_deleted:
+                self.assertRaises(ValueError, dynperf.Delete, ele)
+            else:
+                dynperf.Delete(ele)
+            previously_deleted.add(ele)
+
+        for ele in elements:
+            self.assertFalse(dynperf.Locate(ele))
+
+
 
 if __name__ == '__main__':
     unittest.main()

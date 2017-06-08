@@ -1,4 +1,4 @@
-This is the project submition of 	Simon Kindstroem sudent# 2016-82282 
+This is the project submition of 	Simon Kindstroem student# 2016-82282 
 					Simeon Varbanov student# 2017-28499
 Structure:
 - Project
