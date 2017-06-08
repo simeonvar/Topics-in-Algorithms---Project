@@ -133,29 +133,25 @@ class DynamicPerfectHashing:
             table = self.table_list[j]
             location = table.hash_function.hash(element)
 
-            if table.elements[location].deleted:
-                table.elements[location].value = element
-                table.elements[location].deleted = False
-            else:
-
-                # if a duplicate element is inserted, do nothing
-                if not table.elements[location].deleted and table.elements[location].value == element:
-                    self.count -= 1
-                    return
 
 
-                table.element_count += 1
-                # Is there enough space for the element
-                if table.element_count <= table.max_element_count:
-                    if table.elements[location].deleted:
-                        table.elements[location].value = element
-                        table.elements[location].deleted = False
+            # if a duplicate element is inserted, do nothing
+            if not table.elements[location].deleted and table.elements[location].value == element:
+                self.count -= 1
+                return
 
-                    else:
-                        self.update_sub_table_same_size(table, element)
-                # We have to increase the size of the subtable
+            table.element_count += 1
+            # Is there enough space for the element
+            if table.element_count <= table.max_element_count:
+                if table.elements[location].deleted:
+                    table.elements[location].value = element
+                    table.elements[location].deleted = False
+
                 else:
-                    self.update_sub_table_increase_size(table, element)
+                    self.update_sub_table_same_size(table, element)
+            # We have to increase the size of the subtable
+            else:
+                self.update_sub_table_increase_size(table, element)
 
 
     def update_sub_table_same_size(self, table, new_element):
@@ -170,10 +166,10 @@ class DynamicPerfectHashing:
         sub_table_elements.append(new_element)
         table.element_count = len(sub_table_elements)
 
-        hash_function = HashFunction(table.prime, table.max_element_count)
+        hash_function = HashFunction(table.prime, table.allocated_space)
 
         while not self.is_injective(sub_table_elements, hash_function):
-            hash_function = HashFunction(table.prime, table.max_element_count)
+            hash_function = HashFunction(table.prime, table.allocated_space)
 
         table.hash_function = hash_function
 
@@ -248,18 +244,18 @@ class Entry:
         self.deleted = True
 
 class HashFunction:
-    def __init__(self, prime, M):
+    def __init__(self, prime, allocated_space):
         # it's okay to increase the size of the prime
         # do it to have a bigger random range
         if prime == 1:
             prime = 3
         self.prime = prime
-        self.M = M
+        self.allocated_space = allocated_space
         self.k = random.randrange(1, prime - 1)
 
     def hash(self, element):
         '''Hash the element'''
-        return (self.k * element % self.prime) % self.M
+        return (self.k * element % self.prime) % self.allocated_space
 
 
 class Table:
@@ -273,8 +269,12 @@ class Table:
 
     def update(self, element_count):
         self.element_count = element_count
+
+        # make space for at least two elements
+        element_count = max(1, element_count)
+
         self.max_element_count = 2 * element_count
         self.allocated_space = 2 * self.max_element_count * (self.max_element_count - 1)
         self.elements = [Entry() for _ in range(self.allocated_space)]
-        self.hash_function = HashFunction(self.prime, self.max_element_count)
+        self.hash_function = HashFunction(self.prime, self.allocated_space)
 
