@@ -161,10 +161,10 @@ class TestDynamicPerfectHashing(unittest.TestCase):
     def test_full(self):
         '''Full integration test by randoming 1 million values'''
         count = int(1E6)
+        # Our prime calculation method is really naive, so can't have a very
+        # large universe size
         universe_size = 5000
         elements = [random.randrange(0, universe_size) for _ in range(count)]
-        elements = set(elements) # remove any duplicates
-        count = len(elements)
 
         dynperf = DynPerf(universe_size)
 
@@ -175,8 +175,13 @@ class TestDynamicPerfectHashing(unittest.TestCase):
         for ele in elements:
             self.assertTrue(dynperf.Locate(ele))
 
+        previously_deleted = set()
         for ele in elements:
-            dynperf.Delete(ele)
+            if ele in previously_deleted:
+                self.assertRaises(ValueError, dynperf.Delete, ele)
+            else:
+                dynperf.Delete(ele)
+            previously_deleted.add(ele)
 
         for ele in elements:
             self.assertFalse(dynperf.Locate(ele))
