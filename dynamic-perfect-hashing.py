@@ -77,12 +77,19 @@ class DynamicPerfectHashing:
             if self.star_star_condition(sub_table_space_list, self.M):
                 break
 
-            W.clear()
+            # reset W
+            W = [set() for _ in range(s)]
+
 
         self.table_list = [Table(self.prime) for _ in range(s)]
         for index, table in enumerate(self.table_list):
             element_count = len(W[index])
             table.update(element_count)
+
+        for idx, table_set in enumerate(W):
+            sub_table = self.table_list[idx]
+            while not self.is_injective(table_set, sub_table.hash_function):
+                sub_table.hash_function = HashFunction(self.prime, sub_table.allocated_space)
 
         for element in L:
             j = self.universal_hash_function.hash(element)
@@ -156,7 +163,6 @@ class DynamicPerfectHashing:
 
     def update_sub_table_same_size(self, table, new_element):
         '''Returns an injective hash function for the given table'''
-
         sub_table_elements = list(map(lambda x: x.value, filter(
             lambda element: not element.deleted, table.elements)))
 
@@ -220,6 +226,8 @@ class DynamicPerfectHashing:
         table = self.table_list[j]
         location = table.hash_function.hash(element)
 
+        prev_element = table.elements[location]
+
         if not table.elements[location].deleted and table.elements[location].value == element:
             return True
 
@@ -242,6 +250,9 @@ class Entry:
     def __init__(self):
         self.value = None
         self.deleted = True
+    
+    def __repr__(self):
+        return (str(self.value), str(self.deleted))
 
 class HashFunction:
     def __init__(self, prime, allocated_space):
@@ -256,6 +267,9 @@ class HashFunction:
     def hash(self, element):
         '''Hash the element'''
         return (self.k * element % self.prime) % self.allocated_space
+    
+    def __repr__(self):
+        return "s: {}, k: {}".format(self.allocated_space, self.k)
 
 
 class Table:
@@ -278,3 +292,7 @@ class Table:
         self.elements = [Entry() for _ in range(self.allocated_space)]
         self.hash_function = HashFunction(self.prime, self.allocated_space)
 
+    def __repr__(self):
+        return 'count: {}, max: {}, allocated: {}, hash: {}'.format(
+            self.element_count, self.max_element_count,
+            self.allocated_space, self.hash_function)
